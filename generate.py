@@ -8,6 +8,8 @@ from urllib.request import urlopen
 from tqdm import tqdm
 import sys
 import os
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # pip install taming-transformers works with Gumbel, but does not yet work with coco etc
 # appending the path works with Gumbel, but gives ModuleNotFoundError: No module named 'transformers' for coco etc
@@ -83,6 +85,8 @@ vq_parser.add_argument("-aug",  "--augments", nargs='+', action='append', type=s
 
 # Execute the parse_args() method
 args = vq_parser.parse_args()
+
+os.makedirs(os.path.join('output', args.output.split('.')[0]), exist_ok=True)
 
 if args.cudnn_determinism:
    torch.backends.cudnn.deterministic = True
@@ -534,7 +538,8 @@ def checkin(i, losses):
     out = synth(z)
     info = PngImagePlugin.PngInfo()
     info.add_text('comment', f'{args.prompts}')
-    TF.to_pil_image(out[0].cpu()).save(args.output, pnginfo=info) 	
+    target_path = os.path.join('output', args.output.split('.')[0], f'output_{i:05d}.png')
+    TF.to_pil_image(out[0].cpu()).save(target_path, pnginfo=info)
 
 
 def ascend_txt():
